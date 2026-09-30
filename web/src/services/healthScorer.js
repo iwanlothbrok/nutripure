@@ -1,12 +1,12 @@
-import { getAdditiveInfo } from '../data/additivesDb';
-import { OFFLINE_FOODS } from '../data/offlineFoodsDb';
+import { getAdditiveInfo } from '../data/additivesDb.js';
+import { OFFLINE_FOODS } from '../data/offlineFoodsDb.js';
 
 /**
  * Изчислява комплексна здравна оценка (1 - 100) по стандартите на PureCheck & Scout / Yuka
  * @param {Object} product - Обект с данни за продукта (от Open Food Facts или офлайн базата)
  * @param {string} lang - Език за текстовите обяснения ('bg', 'es', 'en')
  */
-export function calculateHealthScore(product, lang = 'bg') {
+export function calculateHealthScore(product, lang = 'bg', includeAlternatives = true) {
   if (!product) return null;
 
   const nutriments = product.nutriments || {};
@@ -213,12 +213,12 @@ export function calculateHealthScore(product, lang = 'bg') {
 
   // Търсене на по-здравословни алтернативи от каталога
   const healthierAlternatives = [];
-  if (totalScore < 70) {
+  if (includeAlternatives && totalScore < 70) {
     // Търсим алтернативи с висок резултат от същата страна или сходна категория
     for (const alt of OFFLINE_FOODS) {
       if (alt.code !== product.code) {
-        const altScore = calculateHealthScore(alt, lang);
-        if (altScore && altScore.score >= 75) {
+        const altScore = calculateHealthScore(alt, lang, false);
+        if (altScore && altScore.score >= 70) {
           healthierAlternatives.push({
             code: alt.code,
             name: alt.product_name,

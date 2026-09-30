@@ -1,4 +1,4 @@
-import { OFFLINE_FOODS } from '../data/offlineFoodsDb';
+import { OFFLINE_FOODS } from '../data/offlineFoodsDb.js';
 
 const BASE_URL = 'https://world.openfoodfacts.org/api/v2';
 const USER_AGENT = 'NutriPureApp - FoodSafetyScanner - Version 1.0';
