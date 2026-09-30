@@ -1,0 +1,12 @@
+{
+  "appId": "com.purecheck.nutriscan",
+  "appName": "NutriPure",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "ios": {
+    "contentInset": "always"
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
