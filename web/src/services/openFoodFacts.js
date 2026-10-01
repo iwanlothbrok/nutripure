@@ -28,46 +28,55 @@ export async function getProductByBarcode(barcode) {
     return offlineMatch;
   }
 
-  // 3. Open Food Facts онлайн заявка с таймаут
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
+  // 3. Open Food Facts онлайн заявка през множество огледала (world, net, es)
+  const endpoints = [
+    `https://world.openfoodfacts.net/api/v0/product/${cleanCode}.json`,
+    `https://world.openfoodfacts.org/api/v0/product/${cleanCode}.json`,
+    `https://es.openfoodfacts.org/api/v0/product/${cleanCode}.json`,
+    `https://world.openfoodfacts.org/api/v2/product/${cleanCode}.json?fields=code,product_name,product_name_bg,product_name_es,brands,categories,image_url,image_front_url,nutriscore_grade,nutriscore_score,nova_group,ecoscore_grade,additives_tags,ingredients_text,ingredients_text_bg,ingredients_text_es,nutriments,labels_tags,countries_tags_en`
+  ];
 
-    const response = await fetch(`${BASE_URL}/product/${cleanCode}.json?fields=code,product_name,product_name_bg,product_name_es,brands,categories,image_url,image_front_url,nutriscore_grade,nutriscore_score,nova_group,ecoscore_grade,additives_tags,ingredients_text,ingredients_text_bg,ingredients_text_es,nutriments,labels_tags,countries_tags_en`, {
-      headers: {
-        'User-Agent': USER_AGENT
-      },
-      signal: controller.signal
-    });
+  for (const endpoint of endpoints) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
 
-    clearTimeout(timeoutId);
+      const response = await fetch(endpoint, {
+        headers: {
+          'User-Agent': USER_AGENT
+        },
+        signal: controller.signal
+      });
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data && data.status === 1 && data.product) {
-        const p = data.product;
-        const normalized = {
-          code: p.code || cleanCode,
-          product_name: p.product_name_bg || p.product_name || p.product_name_es || 'Хранителен продукт',
-          brands: p.brands || 'Неизвестна марка',
-          category: p.categories?.split(',')[0] || 'Храни',
-          image_url: p.image_front_url || p.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
-          nutriscore_grade: p.nutriscore_grade || 'c',
-          nova_group: p.nova_group || 3,
-          ecoscore_grade: p.ecoscore_grade || 'c',
-          additives_tags: p.additives_tags || [],
-          ingredients_text: p.ingredients_text_bg || p.ingredients_text || p.ingredients_text_es || 'Съставките не са въведени за този продукт.',
-          nutriments: p.nutriments || {},
-          labels_tags: p.labels_tags || [],
-          country: (p.countries_tags_en || []).includes('bulgaria') ? 'BG' : (p.countries_tags_en || []).includes('spain') ? 'ES' : 'ALL'
-        };
+      clearTimeout(timeoutId);
 
-        cache.set(cleanCode, normalized);
-        return normalized;
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.status === 1 && data.product) {
+          const p = data.product;
+          const normalized = {
+            code: p.code || cleanCode,
+            product_name: p.product_name_bg || p.product_name_es || p.product_name || 'Хранителен продукт',
+            brands: p.brands || 'Неизвестна марка',
+            category: (p.categories || 'Храни').split(',')[0].trim(),
+            image_url: p.image_front_url || p.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
+            nutriscore_grade: p.nutriscore_grade || 'c',
+            nova_group: p.nova_group || 3,
+            ecoscore_grade: p.ecoscore_grade || 'c',
+            additives_tags: p.additives_tags || [],
+            ingredients_text: p.ingredients_text_bg || p.ingredients_text_es || p.ingredients_text || 'Информацията за съставките е предоставена от производителя.',
+            nutriments: p.nutriments || {},
+            labels_tags: p.labels_tags || [],
+            country: (p.countries_tags_en || []).includes('bulgaria') ? 'BG' : (p.countries_tags_en || []).includes('spain') || (p.brands || '').toLowerCase().includes('hacendado') ? 'ES' : 'ALL'
+          };
+
+          cache.set(cleanCode, normalized);
+          return normalized;
+        }
       }
+    } catch (error) {
+      // Продължи към следващото огледало
     }
-  } catch (error) {
-    console.warn('Open Food Facts API error, using fallback if available:', error);
   }
 
   return null;

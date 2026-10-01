@@ -1,17 +1,19 @@
 import React from 'react';
-import { ScanLine, Search, History } from 'lucide-react';
+import { ScanLine, Search, History, Sparkles, Activity } from 'lucide-react';
 
 export function BottomNav({ activeTab, setActiveTab }) {
   const tabs = [
-    { id: 'scanner', label: 'Скенер', icon: ScanLine },
+    { id: 'scanner', label: 'Баркод', icon: ScanLine },
+    { id: 'ocr', label: 'AI Етикет', icon: Sparkles },
+    { id: 'tracker', label: 'Радар', icon: Activity },
     { id: 'search', label: 'Търсене', icon: Search },
     { id: 'history', label: 'История', icon: History },
   ];
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 px-6 pb-safe pointer-events-none">
-      <div className="max-w-xs mx-auto mb-2 pointer-events-auto">
-        <div className="bg-[#101422]/90 backdrop-blur-2xl border border-white/10 rounded-full px-4 py-2 shadow-2xl flex items-center justify-around">
+    <nav className="fixed bottom-0 inset-x-0 z-40 px-3 pb-safe pointer-events-none">
+      <div className="max-w-md mx-auto mb-2 pointer-events-auto">
+        <div className="bg-[#101422]/95 backdrop-blur-2xl border border-white/10 rounded-full px-2 py-1.5 shadow-2xl flex items-center justify-around">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;

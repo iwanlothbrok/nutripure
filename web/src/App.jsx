@@ -6,6 +6,8 @@ import { ManualSearch } from './components/ManualSearch';
 import { HistoryView } from './components/HistoryView';
 import { BottomNav } from './components/BottomNav';
 import { GuideModal } from './components/GuideModal';
+import { OcrScanner } from './components/OcrScanner';
+import { NutriTracker } from './components/NutriTracker';
 import { IPhoneInstallModal } from './components/IPhoneInstallModal';
 import { getProductByBarcode } from './services/openFoodFacts';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -118,6 +120,14 @@ export function App() {
           />
         ) : activeTab === 'scanner' ? (
           <Scanner onScan={handleScan} country={country} />
+        ) : activeTab === 'ocr' ? (
+          <OcrScanner />
+        ) : activeTab === 'tracker' ? (
+          <NutriTracker
+            history={history}
+            onSelectProduct={(code) => handleScan(code)}
+            onClearHistory={handleClearHistory}
+          />
         ) : activeTab === 'search' ? (
           <ManualSearch
             onSelectProduct={(code) => handleScan(code)}
