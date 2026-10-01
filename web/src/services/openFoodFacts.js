@@ -85,6 +85,8 @@ export async function searchProducts(query, country = 'ALL') {
   const localResults = OFFLINE_FOODS.filter(p => {
     const matchesName = (p.product_name || '').toLowerCase().includes(q) ||
                         (p.brands || '').toLowerCase().includes(q) ||
+                        (p.supermarket || '').toLowerCase().includes(q) ||
+                        (p.category || '').toLowerCase().includes(q) ||
                         p.code.includes(q);
     const matchesCountry = country === 'ALL' || p.country === country || p.country === 'ALL';
     return matchesName && matchesCountry;

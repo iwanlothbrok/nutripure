@@ -25,7 +25,7 @@ export function ManualSearch({ onSelectProduct, country }) {
   }, [query, country]);
 
   const popularSearches = [
-    'Кисело мляко', 'Лютеница', 'Девин', 'Салам', 'Jamon', 'Aceite de oliva', 'Galletas', 'Coca Cola'
+    'Mercadona', 'Lidl', 'Billa', 'Kaufland', 'Hacendado', 'Верея', 'Маджаров', 'Дерони', 'Guacamole', 'Овесени ядки'
   ];
 
   return (

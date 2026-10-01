@@ -9,11 +9,20 @@ export function Scanner({ onScan, country }) {
   const [torchOn, setTorchOn] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const [storeFilter, setStoreFilter] = useState('all');
   const scannerRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Филтриране на примерните храни според държавата
-  const sampleFoods = OFFLINE_FOODS.filter(f => country === 'ALL' || f.country === country || f.country === 'ALL');
+  // Филтриране на примерните храни според държавата и супермаркета
+  const sampleFoods = OFFLINE_FOODS.filter(f => {
+    const matchesCountry = country === 'ALL' || f.country === country || f.country === 'ALL';
+    if (!matchesCountry) return false;
+
+    if (storeFilter === 'mercadona') return f.supermarket === 'Mercadona';
+    if (storeFilter === 'lidl_kaufland') return f.supermarket === 'Lidl' || f.supermarket === 'Kaufland';
+    if (storeFilter === 'bg') return f.supermarket === 'Billa' || f.supermarket === 'Български производител' || f.country === 'BG';
+    return true;
+  });
 
   useEffect(() => {
     let html5QrCode = null;
@@ -247,7 +256,7 @@ export function Scanner({ onScan, country }) {
 
       {/* Sample Foods Catalog (Instant 1-Click Scan) */}
       <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2">
             <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
               <Sparkles className="w-3.5 h-3.5" />
@@ -257,6 +266,53 @@ export function Scanner({ onScan, country }) {
             </h3>
           </div>
           <span className="text-[10px] text-slate-500 font-medium">1-клик анализ</span>
+        </div>
+
+        {/* Supermarket Filter Pills */}
+        <div className="flex items-center space-x-1 overflow-x-auto pb-2 mb-3 scrollbar-none text-[11px] font-semibold">
+          <button
+            onClick={() => setStoreFilter('all')}
+            className={`px-2.5 py-1 rounded-xl transition-all whitespace-nowrap ${
+              storeFilter === 'all'
+                ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20'
+                : 'bg-white/5 text-slate-400 hover:text-white border border-white/5'
+            }`}
+          >
+            Всички ({sampleFoods.length})
+          </button>
+          <button
+            onClick={() => setStoreFilter('mercadona')}
+            className={`px-2.5 py-1 rounded-xl transition-all whitespace-nowrap flex items-center space-x-1 ${
+              storeFilter === 'mercadona'
+                ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20'
+                : 'bg-white/5 text-slate-400 hover:text-white border border-white/5'
+            }`}
+          >
+            <span>🇪🇸</span>
+            <span>Mercadona</span>
+          </button>
+          <button
+            onClick={() => setStoreFilter('lidl_kaufland')}
+            className={`px-2.5 py-1 rounded-xl transition-all whitespace-nowrap flex items-center space-x-1 ${
+              storeFilter === 'lidl_kaufland'
+                ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20'
+                : 'bg-white/5 text-slate-400 hover:text-white border border-white/5'
+            }`}
+          >
+            <span>🛒</span>
+            <span>Lidl & Kaufland</span>
+          </button>
+          <button
+            onClick={() => setStoreFilter('bg')}
+            className={`px-2.5 py-1 rounded-xl transition-all whitespace-nowrap flex items-center space-x-1 ${
+              storeFilter === 'bg'
+                ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20'
+                : 'bg-white/5 text-slate-400 hover:text-white border border-white/5'
+            }`}
+          >
+            <span>🇧🇬</span>
+            <span>Billa & Български</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5">
@@ -280,7 +336,7 @@ export function Scanner({ onScan, country }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-1">
                   <span className="text-xs">{food.country === 'BG' ? '🇧🇬' : food.country === 'ES' ? '🇪🇸' : '🌍'}</span>
-                  <span className="text-[10px] font-bold text-slate-400 truncate">{food.brands}</span>
+                  <span className="text-[10px] font-bold text-slate-400 truncate">{food.supermarket || food.brands}</span>
                 </div>
                 <h4 className="text-xs font-extrabold text-white truncate group-hover:text-emerald-400 transition-colors mt-0.5">
                   {food.product_name}
