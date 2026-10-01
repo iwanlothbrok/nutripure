@@ -1,7 +1,7 @@
 import React from 'react';
 import { Smartphone, HelpCircle, Sparkles } from 'lucide-react';
 
-export function Header({ country, setCountry, onOpenGuide, onOpenIPhone }) {
+export function Header({ country, setCountry, onOpenGuide, onOpenIPhone, onOpenGemini }) {
   return (
     <header className="sticky top-0 z-40 bg-[#08090E]/85 backdrop-blur-2xl border-b border-white/[0.06] px-4 pt-safe pb-3 flex items-center justify-between transition-all">
       {/* Brand logo & title */}
@@ -64,6 +64,16 @@ export function Header({ country, setCountry, onOpenGuide, onOpenIPhone }) {
             <span className="text-[11px]">🌍</span>
           </button>
         </div>
+
+        {/* Google Gemini AI Key Button */}
+        <button
+          onClick={onOpenGemini}
+          className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-950/80 to-[#101422] hover:from-emerald-900/50 hover:to-[#151a2d] border border-emerald-500/30 flex items-center space-x-1.5 text-emerald-400 transition-all active:scale-95 shadow-sm"
+          title="Google Gemini Настройки"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="text-[11px] font-extrabold text-white">Gemini</span>
+        </button>
 
         {/* iPhone Install Button */}
         <button

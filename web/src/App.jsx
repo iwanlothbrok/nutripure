@@ -6,6 +6,7 @@ import { ManualSearch } from './components/ManualSearch';
 import { HistoryView } from './components/HistoryView';
 import { BottomNav } from './components/BottomNav';
 import { GuideModal } from './components/GuideModal';
+import { GeminiKeyModal } from './components/GeminiKeyModal';
 import { OcrScanner } from './components/OcrScanner';
 import { NutriTracker } from './components/NutriTracker';
 import { IPhoneInstallModal } from './components/IPhoneInstallModal';
@@ -20,6 +21,7 @@ export function App() {
   const [notFoundBarcode, setNotFoundBarcode] = useState(null);
   const [guideOpen, setGuideOpen] = useState(false);
   const [iphoneOpen, setIphoneOpen] = useState(false);
+  const [geminiOpen, setGeminiOpen] = useState(false);
 
   // History & Favorites from LocalStorage
   const [history, setHistory] = useState(() => {
@@ -104,6 +106,7 @@ export function App() {
           setCountry={setCountry}
           onOpenGuide={() => setGuideOpen(true)}
           onOpenIPhone={() => setIphoneOpen(true)}
+          onOpenGemini={() => setGeminiOpen(true)}
         />
       )}
 
@@ -116,12 +119,13 @@ export function App() {
             onSelectAlternative={(code) => handleScan(code)}
             isFavorite={isFavorite}
             onToggleFavorite={handleToggleFavorite}
+            onOpenGemini={() => setGeminiOpen(true)}
             lang="bg"
           />
         ) : activeTab === 'scanner' ? (
           <Scanner onScan={handleScan} country={country} />
         ) : activeTab === 'ocr' ? (
-          <OcrScanner />
+          <OcrScanner onOpenGemini={() => setGeminiOpen(true)} />
         ) : activeTab === 'tracker' ? (
           <NutriTracker
             history={history}
@@ -194,6 +198,9 @@ export function App() {
 
       {/* iPhone PWA & iOS Installation Modal */}
       <IPhoneInstallModal isOpen={iphoneOpen} onClose={() => setIphoneOpen(false)} />
+
+      {/* Google Gemini AI Key Modal */}
+      <GeminiKeyModal isOpen={geminiOpen} onClose={() => setGeminiOpen(false)} />
     </div>
   );
 }

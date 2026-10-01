@@ -4,10 +4,14 @@ import {
   ShieldAlert, Sparkles, ChevronRight, Check, Bookmark, Sparkle
 } from 'lucide-react';
 import { calculateHealthScore } from '../services/healthScorer';
+import { askGeminiNutritionist, getGeminiApiKey } from '../services/geminiService';
 
-export function ProductDetail({ product, onBack, onSelectAlternative, isFavorite, onToggleFavorite, lang = 'bg' }) {
+export function ProductDetail({ product, onBack, onSelectAlternative, isFavorite, onToggleFavorite, onOpenGemini, lang = 'bg' }) {
   const [selectedAdditive, setSelectedAdditive] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [geminiResponse, setGeminiResponse] = useState(null);
+  const [geminiError, setGeminiError] = useState(null);
 
   const analysis = calculateHealthScore(product, lang);
   if (!analysis) return null;
@@ -42,6 +46,40 @@ export function ProductDetail({ product, onBack, onSelectAlternative, isFavorite
       navigator.clipboard?.writeText(`${product.product_name} - Оценка ${score}/100 в NutriPure. ${explanation}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleAskGemini = async () => {
+    const key = getGeminiApiKey();
+    if (!key) {
+      if (onOpenGemini) {
+        onOpenGemini();
+      } else {
+        setGeminiError('Моля, въведете Google Gemini API ключ от бутона в горната лента.');
+      }
+      return;
+    }
+
+    setGeminiLoading(true);
+    setGeminiError(null);
+    try {
+      const response = await askGeminiNutritionist({
+        productName: product.product_name,
+        brand: product.brands,
+        score,
+        additives: (additivesAnalysis || []).map(a => `${a.code} (${a.name})`),
+        ingredientsText: product.ingredients_text
+      });
+      setGeminiResponse(response);
+    } catch (err) {
+      if (err.message === 'MISSING_API_KEY') {
+        if (onOpenGemini) onOpenGemini();
+        setGeminiError('Липсва Gemini API ключ. Натиснете бутона Gemini горе.');
+      } else {
+        setGeminiError(`Грешка при връзка с Gemini: ${err.message}`);
+      }
+    } finally {
+      setGeminiLoading(false);
     }
   };
 
@@ -199,6 +237,50 @@ export function ProductDetail({ product, onBack, onSelectAlternative, isFavorite
           <p className="text-xs text-slate-300 leading-relaxed font-normal">
             {explanation}
           </p>
+        </div>
+
+        {/* Google Gemini AI Live Nutritionist Card */}
+        <div className="p-4 rounded-3xl bg-gradient-to-br from-[#101422] via-[#0d121f] to-emerald-950/20 border border-emerald-500/30 shadow-xl relative overflow-hidden">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center space-x-2">
+              <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                <Sparkles className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-white">Gemini 1.5 Flash Нутриционист</h4>
+                <p className="text-[10px] text-emerald-400 font-bold">Медицинско заключение от AI</p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleAskGemini}
+              disabled={geminiLoading}
+              className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-extrabold text-[11px] transition-all shadow-md shadow-emerald-500/20 active:scale-95 flex items-center space-x-1.5"
+            >
+              {geminiLoading ? (
+                <span>Анализ...</span>
+              ) : (
+                <>
+                  <Sparkles className="w-3 h-3" />
+                  <span>Попитай Gemini</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {geminiResponse ? (
+            <div className="mt-3 p-3.5 rounded-2xl bg-[#08090E]/80 border border-emerald-500/20 text-xs text-slate-200 leading-relaxed whitespace-pre-line animate-fadeIn font-normal">
+              {geminiResponse}
+            </div>
+          ) : geminiError ? (
+            <div className="mt-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-2xl">
+              {geminiError}
+            </div>
+          ) : (
+            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              Натиснете бутона за персонален клиничен съвет от <strong>Google Gemini Flash</strong> относно съставките, въздействието върху метаболизма и по-здравословни алтернативи.
+            </p>
+          )}
         </div>
 
         {/* Positives & Negatives Cards */}

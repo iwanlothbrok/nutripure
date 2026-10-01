@@ -1,14 +1,18 @@
 import React, { useState, useRef } from 'react';
 import { Camera, Upload, Sparkles, AlertTriangle, ShieldCheck, CheckCircle2, ChevronRight, RefreshCw, FileText } from 'lucide-react';
 import { analyzeIngredientsText } from '../services/ingredientAnalyzer';
+import { askGeminiNutritionist, getGeminiApiKey } from '../services/geminiService';
 
-export function OcrScanner({ onAnalysisDone }) {
+export function OcrScanner({ onAnalysisDone, onOpenGemini }) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState('');
   const [recognizedText, setRecognizedText] = useState('');
   const [analysisResult, setAnalysisResult] = useState(null);
   const [manualText, setManualText] = useState('');
   const [mode, setMode] = useState('camera'); // 'camera' or 'paste'
+  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [geminiReply, setGeminiReply] = useState(null);
+  const [geminiError, setGeminiError] = useState(null);
   const fileInputRef = useRef(null);
 
   const processImage = async (file) => {
@@ -65,6 +69,41 @@ export function OcrScanner({ onAnalysisDone }) {
     setRecognizedText('');
     setManualText('');
     setProgress('');
+    setGeminiReply(null);
+    setGeminiError(null);
+  };
+
+  const handleAskGeminiOcr = async () => {
+    const key = getGeminiApiKey();
+    if (!key) {
+      if (onOpenGemini) {
+        onOpenGemini();
+      } else {
+        setGeminiError('Моля, въведете Google Gemini API ключ от бутона в горната лента.');
+      }
+      return;
+    }
+
+    setGeminiLoading(true);
+    setGeminiError(null);
+    try {
+      const response = await askGeminiNutritionist({
+        productName: 'Сканиран етикет на продукт',
+        ingredientsText: recognizedText || manualText,
+        score: analysisResult?.cleanScore,
+        additives: (analysisResult?.additives || []).map(a => `${a.code} (${a.name})`)
+      });
+      setGeminiReply(response);
+    } catch (err) {
+      if (err.message === 'MISSING_API_KEY') {
+        if (onOpenGemini) onOpenGemini();
+        setGeminiError('Липсва Gemini API ключ. Натиснете бутона Gemini горе.');
+      } else {
+        setGeminiError(`Грешка при връзка с Gemini: ${err.message}`);
+      }
+    } finally {
+      setGeminiLoading(false);
+    }
   };
 
   return (
@@ -212,6 +251,43 @@ export function OcrScanner({ onAnalysisDone }) {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Google Gemini AI OCR Expert Opinion */}
+          <div className="p-4 rounded-3xl bg-gradient-to-br from-[#101422] via-[#0d121f] to-emerald-950/20 border border-emerald-500/30 shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-white">Gemini 1.5 Flash Нутриционист</h4>
+                  <p className="text-[10px] text-emerald-400 font-bold">AI експертен анализ на етикета</p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleAskGeminiOcr}
+                disabled={geminiLoading}
+                className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-extrabold text-[11px] transition-all shadow-md shadow-emerald-500/20 active:scale-95 flex items-center space-x-1"
+              >
+                {geminiLoading ? <span>Мислене...</span> : <span>Попитай AI</span>}
+              </button>
+            </div>
+
+            {geminiReply ? (
+              <div className="mt-3 p-3.5 rounded-2xl bg-[#08090E]/80 border border-emerald-500/20 text-xs text-slate-200 leading-relaxed whitespace-pre-line animate-fadeIn font-normal">
+                {geminiReply}
+              </div>
+            ) : geminiError ? (
+              <div className="mt-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-2xl">
+                {geminiError}
+              </div>
+            ) : (
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                Натиснете <strong>"Попитай AI"</strong> за пълно медицинско тълкуване на тези съставки от <strong>Google Gemini Flash</strong>.
+              </p>
+            )}
           </div>
 
           {/* Red Flags / Warnings */}
