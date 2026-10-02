@@ -16,13 +16,14 @@ export function ManualSearch({ onSelectProduct, country }) {
 
     const timer = setTimeout(async () => {
       setLoading(true);
-      const res = await searchProducts(query, country);
+      // Търсим глобално във всички бази (Испания, Mercadona, България и др.), за да не се филтрират неволно продукти
+      const res = await searchProducts(query, 'ALL');
       setResults(res);
       setLoading(false);
-    }, 350);
+    }, 300);
 
     return () => clearTimeout(timer);
-  }, [query, country]);
+  }, [query]);
 
   const popularSearches = [
     'Mercadona', 'Lidl', 'Billa', 'Kaufland', 'Hacendado', 'Верея', 'Маджаров', 'Дерони', 'Guacamole', 'Овесени ядки'

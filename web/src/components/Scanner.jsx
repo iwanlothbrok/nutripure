@@ -13,14 +13,12 @@ export function Scanner({ onScan, country }) {
   const scannerRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Филтриране на примерните храни според държавата и супермаркета
+  // Филтриране на примерните храни според избрания таб за супермаркет
   const sampleFoods = OFFLINE_FOODS.filter(f => {
-    const matchesCountry = country === 'ALL' || f.country === country || f.country === 'ALL';
-    if (!matchesCountry) return false;
-
-    if (storeFilter === 'mercadona') return f.supermarket === 'Mercadona';
+    if (storeFilter === 'mercadona') return f.supermarket === 'Mercadona' || f.country === 'ES';
     if (storeFilter === 'lidl_kaufland') return f.supermarket === 'Lidl' || f.supermarket === 'Kaufland';
     if (storeFilter === 'bg') return f.supermarket === 'Billa' || f.supermarket === 'Български производител' || f.country === 'BG';
+    // При 'all' показваме целия офлайн каталог (Mercadona + Lidl + BG)
     return true;
   });
 

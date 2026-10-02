@@ -101,48 +101,58 @@ export async function searchProducts(query, country = 'ALL') {
     return matchesName && matchesCountry;
   });
 
-  // Онлайн търсене
-  try {
-    const countryFilter = country === 'BG' ? '&countries_tags_en=bulgaria' : country === 'ES' ? '&countries_tags_en=spain' : '';
-    const url = `${BASE_URL}/search?search_terms=${encodeURIComponent(q)}${countryFilter}&page_size=15&fields=code,product_name,product_name_bg,product_name_es,brands,image_url,image_front_url,nutriscore_grade,nova_group,additives_tags,nutriments,countries_tags_en`;
-    
-    const response = await fetch(url, {
-      headers: { 'User-Agent': USER_AGENT }
-    });
+  // Онлайн търсене през множество огледала (net, org)
+  const searchEndpoints = [
+    `https://world.openfoodfacts.net/api/v2/search?search_terms=${encodeURIComponent(q)}&page_size=20&fields=code,product_name,product_name_bg,product_name_es,brands,image_url,image_front_url,nutriscore_grade,nova_group,additives_tags,nutriments,countries_tags_en`,
+    `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(q)}&page_size=20&fields=code,product_name,product_name_bg,product_name_es,brands,image_url,image_front_url,nutriscore_grade,nova_group,additives_tags,nutriments,countries_tags_en`
+  ];
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data && data.products) {
-        const onlineProducts = data.products
-          .filter(p => p.product_name && p.code)
-          .map(p => ({
-            code: p.code,
-            product_name: p.product_name_bg || p.product_name || p.product_name_es,
-            brands: p.brands || 'Стандартен производител',
-            image_url: p.image_front_url || p.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
-            nutriscore_grade: p.nutriscore_grade || 'c',
-            nova_group: p.nova_group || 3,
-            additives_tags: p.additives_tags || [],
-            nutriments: p.nutriments || {},
-            country: (p.countries_tags_en || []).includes('bulgaria') ? 'BG' : (p.countries_tags_en || []).includes('spain') ? 'ES' : 'ALL'
-          }));
+  for (const endpoint of searchEndpoints) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-        // Обединяване без дубликати по баркод
-        const combined = [...localResults];
-        const seenCodes = new Set(localResults.map(p => p.code));
+      const response = await fetch(endpoint, {
+        headers: { 'User-Agent': USER_AGENT },
+        signal: controller.signal
+      });
 
-        for (const op of onlineProducts) {
-          if (!seenCodes.has(op.code)) {
-            combined.push(op);
-            seenCodes.add(op.code);
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.products && data.products.length > 0) {
+          const onlineProducts = data.products
+            .filter(p => (p.product_name || p.product_name_es || p.product_name_bg) && p.code)
+            .map(p => ({
+              code: p.code,
+              product_name: p.product_name_bg || p.product_name_es || p.product_name,
+              brands: p.brands || 'Стандартен производител',
+              image_url: p.image_front_url || p.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
+              nutriscore_grade: p.nutriscore_grade || 'c',
+              nova_group: p.nova_group || 3,
+              additives_tags: p.additives_tags || [],
+              nutriments: p.nutriments || {},
+              country: (p.countries_tags_en || []).includes('bulgaria') ? 'BG' : (p.countries_tags_en || []).includes('spain') || (p.brands || '').toLowerCase().includes('hacendado') ? 'ES' : 'ALL'
+            }));
+
+          // Обединяване без дубликати по баркод
+          const combined = [...localResults];
+          const seenCodes = new Set(localResults.map(p => p.code));
+
+          for (const op of onlineProducts) {
+            if (!seenCodes.has(op.code)) {
+              combined.push(op);
+              seenCodes.add(op.code);
+            }
           }
-        }
 
-        return combined;
+          return combined;
+        }
       }
+    } catch (err) {
+      // Продължи към следващото огледало
     }
-  } catch (err) {
-    console.warn('Search API failed, returning local matches:', err);
   }
 
   return localResults;
