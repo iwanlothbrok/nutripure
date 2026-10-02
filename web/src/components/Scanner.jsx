@@ -266,7 +266,7 @@ export function Scanner({ onScan, country }) {
           <span className="text-[10px] text-slate-500 font-medium">1-клик анализ</span>
         </div>
 
-        {/* Supermarket Filter Pills */}
+        {/* Supermarket Filter Pills with accurate individual counts */}
         <div className="flex items-center space-x-1 overflow-x-auto pb-2 mb-3 scrollbar-none text-[11px] font-semibold">
           <button
             onClick={() => setStoreFilter('all')}
@@ -276,7 +276,7 @@ export function Scanner({ onScan, country }) {
                 : 'bg-white/5 text-slate-400 hover:text-white border border-white/5'
             }`}
           >
-            Всички ({sampleFoods.length})
+            Всички ({OFFLINE_FOODS.length})
           </button>
           <button
             onClick={() => setStoreFilter('mercadona')}
@@ -287,7 +287,7 @@ export function Scanner({ onScan, country }) {
             }`}
           >
             <span>🇪🇸</span>
-            <span>Mercadona</span>
+            <span>Mercadona ({OFFLINE_FOODS.filter(f => f.supermarket === 'Mercadona' || f.country === 'ES').length})</span>
           </button>
           <button
             onClick={() => setStoreFilter('lidl_kaufland')}
@@ -298,7 +298,7 @@ export function Scanner({ onScan, country }) {
             }`}
           >
             <span>🛒</span>
-            <span>Lidl & Kaufland</span>
+            <span>Lidl & Kaufland ({OFFLINE_FOODS.filter(f => f.supermarket === 'Lidl' || f.supermarket === 'Kaufland').length})</span>
           </button>
           <button
             onClick={() => setStoreFilter('bg')}
@@ -309,7 +309,7 @@ export function Scanner({ onScan, country }) {
             }`}
           >
             <span>🇧🇬</span>
-            <span>Billa & Български</span>
+            <span>Billa & Български ({OFFLINE_FOODS.filter(f => f.supermarket === 'Billa' || f.supermarket === 'Български производител' || f.country === 'BG').length})</span>
           </button>
         </div>
 
