@@ -180,15 +180,26 @@ export function App() {
             <p className="text-xs text-slate-300 mb-2 leading-relaxed">
               Баркод <span className="font-mono text-emerald-400 font-bold">{notFoundBarcode}</span> все още не е регистриран за пазарите в България или Испания.
             </p>
-            <p className="text-[11px] text-slate-400 mb-5">
-              Можете да проверите номера или да изберете храна от примерните продукти.
+            <p className="text-[11px] text-slate-400 mb-4">
+              Това най-често е прясно опакована стока (месо, кулинария или деликатес) с вътрешен етикет.
             </p>
-            <button
-              onClick={() => setNotFoundBarcode(null)}
-              className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 font-extrabold text-xs text-white transition-all shadow-lg shadow-emerald-600/20 active:scale-[0.98]"
-            >
-              Разбрах
-            </button>
+            <div className="flex flex-col space-y-2">
+              <button
+                onClick={() => {
+                  setNotFoundBarcode(null);
+                  setActiveTab('ocr');
+                }}
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 font-extrabold text-xs text-white transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98] flex items-center justify-center space-x-2"
+              >
+                <span>📸 Снимай етикета със съставките (AI)</span>
+              </button>
+              <button
+                onClick={() => setNotFoundBarcode(null)}
+                className="w-full py-2.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-400 font-bold text-xs transition-all active:scale-[0.98]"
+              >
+                Затвори
+              </button>
+            </div>
           </div>
         </div>
       )}
